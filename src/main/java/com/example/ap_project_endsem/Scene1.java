@@ -5,7 +5,6 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
@@ -20,6 +19,10 @@ public class Scene1 extends Application {
 
     @Override
     public void start(Stage stage) {
+        welcomeScreen(stage);
+    }
+
+    private void welcomeScreen(Stage stage) {
         Group root = new Group();
         Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
 
@@ -34,31 +37,33 @@ public class Scene1 extends Application {
         Text stickText = new Text("STICK");
         stickText.setFont(Font.font("Arial", FontWeight.BOLD, 60));
         double stickTextHeight = stickText.getLayoutBounds().getHeight();
-
         // Create Hero text
         Text heroText = new Text("HERO");
         heroText.setFont(Font.font("Arial", FontWeight.BOLD, 55));
         heroText.setY(stickTextHeight + 20); // Set Y position below the Stick text
-
         // Center the text within the image background
         double textWidth = Math.max(stickText.getLayoutBounds().getWidth(), heroText.getLayoutBounds().getWidth());
         double centerX = (scene.getWidth() - textWidth) / 2;
         double centerY = 100;
-
         stickText.setX(centerX);
         stickText.setY(centerY);
 
+        heroText.setX(centerX+10);
+        heroText.setY(centerY + 2*stickTextHeight/3);
         heroText.setX(centerX + 10);
         heroText.setY(centerY + 2 * stickTextHeight / 3);
 
         root.getChildren().addAll(stickText, heroText);
-        createPlayButton(root, scene);
+
+        // Create "PLAY" button
+        createPlayButton(root, scene, stage);
+
         stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
     }
 
-    private void createPlayButton(Group root, Scene scene) {
+    private void createPlayButton(Group root, Scene scene, Stage stage) {
         // Create a red circle (1.5 times larger)
         double circleRadius = 50 * 1.5;
         Circle circle = new Circle(circleRadius, Color.RED);
@@ -71,6 +76,9 @@ public class Scene1 extends Application {
         playText.setFill(Color.WHITE);
         playText.setX(circle.getCenterX() - playText.getLayoutBounds().getWidth() / 2);
         playText.setY(circle.getCenterY() + playText.getLayoutBounds().getHeight() / 4);
+
+        // Add event handler to switch to Scene2 when the button is clicked
+
 
         root.getChildren().addAll(circle, playText);
     }
