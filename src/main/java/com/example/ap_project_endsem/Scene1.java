@@ -1,5 +1,7 @@
 package com.example.ap_project_endsem;
+import javafx.animation.KeyFrame;
 import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -8,7 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -16,11 +18,25 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Scene1 extends Application {
     private boolean isVolumeOn = true;
+    private boolean isFlipping = false;
+    private boolean isBuildingStick = false;
+    private boolean isMovingHero = false;
+    private boolean lastpillar = false;
+    private Rectangle lpillar ;
+    private Rectangle currpillar ;
+    private Rectangle nextpillar ;
+    private ArrayList<Circle> circles = new ArrayList<>(0);
+    private List<Rectangle> pillars = new ArrayList<>();
+
     private int HighScore = 0;
     private int CurrentScore = 0;
     private double lastPillarEndX= 0.0;
@@ -267,6 +283,77 @@ public class Scene1 extends Application {
         });
     }
 
+    private void buildStick(Rectangle stick) {
+        Platform.runLater(() -> {
+            double oldY = stick.getY();
+            stick.setY(oldY - 2);
+            stick.setHeight(stick.getHeight() + 2);
+        });
+    }
+
+    private void rotateStick(Rectangle stick) {
+        double pivotX = stick.getX() + stick.getWidth() / 2; // Set pivotX to the center of the stick
+        double pivotY = stick.getY() + stick.getHeight(); // Set pivotY to the bottom of the stick
+
+        Rotate rotate = new Rotate(90, pivotX, pivotY);
+        stick.getTransforms().add(rotate);
+
+    }
+    private void checkCollisionWithCircles(ImageView hero ,Group root , ArrayList<Circle> circles ) {
+        for (Circle circle : circles) {
+           // System.out.println(circle.toString());
+            if (hero.getBoundsInParent().intersects(circle.getBoundsInParent())) {
+                root.getChildren().remove(circle);
+                CurrentScore++;
+                System.out.println("Score: " + CurrentScore);
+            }
+        }
+    }
+    private void moveStickHero(Rectangle stick , ImageView hero,Group root) {
+        double startX = stick.getX();
+        double endX = stick.getX() + stick.getHeight();
+        double heroWidth = hero.getFitWidth();
+
+        // Animate the hero moving along the stick
+        Timeline moveHeroTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(0.01), event -> {
+                    if (hero.getLayoutX() + heroWidth < endX-15) {
+                        hero.setLayoutX(hero.getLayoutX() + 2);
+                        checkCollisionWithCircles(hero,root,circles);
+                        for (int i = 0; i < pillars.size(); i++) {
+                            Rectangle pillar = pillars.get(i);
+                            double nextPillarX = (i < pillars.size() - 1) ? pillars.get(i + 1).getX() : Double.MAX_VALUE;
+
+                            // Check if hero should fall
+                            if (hero.getX() + stick.getHeight() < pillar.getX()-pillar.getWidth()/2 || hero.getX() > nextPillarX+pillar.getWidth()/2 ) {
+                                // Implement the logic for hero falling
+                                System.out.println("Hero falls!");
+                                break; // You may want to break out of the loop or handle falling in some way
+                            }
+                        }
+                    }
+                })
+        );
+        moveHeroTimeline.setCycleCount(Timeline.INDEFINITE);
+        moveHeroTimeline.play();
+    }
+
+    private void flipHero(ImageView hero) {
+        if (!isFlipping) {
+            isFlipping = true;
+
+            // Flip the hero vertically
+            hero.setScaleY(hero.getScaleY() * -1);
+            hero.setY(hero.getY()+25);
+
+            // Set a small delay to avoid rapid flipping
+            Timeline flipTimeline = new Timeline(
+                    new KeyFrame(Duration.seconds(0.5), event -> isFlipping = false)
+            );
+            flipTimeline.play();
+        }
+    }
+
     private void showScene2(Stage stage) {
         Group root = new Group();
         Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
@@ -304,11 +391,81 @@ public class Scene1 extends Application {
         // Generate the first pillar
         PillarInfo firstPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
         setHeroPosition(heroim, firstPillarInfo);
-        // Generate the second pillar
-        PillarInfo secondPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
-        //setHeroPosition(heroim, secondPillarInfo);
+        double screenHeight = stage.getHeight();
+        double pillarWidth = 100;
+        double minDistanceBetweenPillars = 200;
+        double maxDistanceBetweenPillars = 400;
+        double totalWidth = 4 * pillarWidth + 3 * minDistanceBetweenPillars;
+        double startX = (screenHeight - totalWidth) / 2;
+        for (int i = 0; i < 4; i++) {
+            Rectangle pillar = new Rectangle(50, 300, Color.BLACK);
+            pillar.setY(screenHeight - pillar.getHeight()+21);
+            pillar.setX(startX + i * (pillarWidth + minDistanceBetweenPillars));
+            lpillar=pillar ;
+            pillars.add(pillar);
+            if (pillar.getX()>stage.getWidth()){
+                lastpillar=true ;
+                lpillar=pillar ;
+                break ;
+            }
 
-        root.getChildren().addAll(heroim, pauseButton);
+            double circleRadius = 2 * 1.8;
+            double dist = 100+20*Math.random()+200*i ;
+            if (dist < 700){
+                Circle circle = new Circle(circleRadius, Color.RED);
+                circle.setCenterX(dist);
+                double randomValue = Math.random();
+                double randomY = ((randomValue < 0.5) ? 40 : -10);
+                circle.setCenterY(screenHeight - pillar.getHeight()+randomY);
+                circles.add(circle);
+                root.getChildren().add(circle);
+            }
+            root.getChildren().add(pillar);
+        }
+
+        Rectangle stick = new Rectangle(4, 2, Color.BLACK);
+        stick.setX(heroim.getX()+25);
+        stick.setY(heroim.getY()+28);
+        Rotate stickRotation = new Rotate(0, 0, 0);
+        stick.getTransforms().add(stickRotation);
+
+        // Set up the timeline for stick building
+        Timeline buildTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(0.01), event -> buildStick(stick))
+        );
+        buildTimeline.setCycleCount(Timeline.INDEFINITE);
+
+        scene.setOnMousePressed(event -> {
+            if (!isBuildingStick && isMovingHero) {
+                flipHero(heroim);
+                isFlipping = true;  // Set the flipping flag
+
+            } else if (!isMovingHero && !isBuildingStick ) {
+                isBuildingStick = true;
+                buildTimeline.play();
+            }
+        });
+
+        scene.setOnMouseReleased(event -> {
+            isBuildingStick = false;
+            buildTimeline.pause();
+
+            if (!isFlipping && !isBuildingStick) {
+                rotateStick(stick);
+                moveStickHero(stick, heroim, root);
+                isMovingHero = true;
+            }
+
+            if (event.getButton() == MouseButton.SECONDARY) { // Right mouse button
+                // Toggle flipping flag when the right mouse button is released
+                isFlipping = !isFlipping;
+            }
+        });
+
+
+
+
+        root.getChildren().addAll(heroim, pauseButton,stick);
         stage.setScene(scene);
     }
 
@@ -350,6 +507,7 @@ public class Scene1 extends Application {
 
         // Update the lastPillarEndX
         lastPillarEndX = endX;
+        currpillar =pillar ;
 
         // Return information about the generated pillar
         return new PillarInfo(startX, endX, startY, endY);
