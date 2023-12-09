@@ -1,6 +1,5 @@
 package com.example.ap_project_endsem;
 import javafx.application.Application;
-
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -8,12 +7,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class Scene1 extends Application {
+    private double lastPillarEndX= 0.0;
     public static void main(String[] args) {
         launch(args);
     }
@@ -111,19 +112,89 @@ public class Scene1 extends Application {
         // Hero Image
         Image hero = new Image("heroim.png");
         ImageView heroim = new ImageView(hero);
-        double heroSize = (3.0 / 40.0) * scene.getWidth();
+        double heroSize = (2.0 / 40.0) * scene.getWidth();
         heroim.setFitWidth(heroSize);
         heroim.setFitHeight(heroSize);
-
+        PillarInfo pillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
+        setHeroPosition(heroim, pillarInfo);
         // Center the hero image within the scene
         double centerX = (scene.getWidth() - heroSize) / 2;
         double centerY = (scene.getHeight() - heroSize) / 2;
 
         heroim.setX(centerX);
         heroim.setY(centerY);
+        PillarInfo secondPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
+        setHeroPosition(heroim, secondPillarInfo);
 
         root.getChildren().addAll(heroim, pauseButton);
         stage.setScene(scene);
     }
+    // The code requires scene to be rectangle only it is a dependent code
+    private PillarInfo generateRandomPillar(Group root, double sceneWidth, double heroSize) {
+        double minPillarWidth = 1.5 * heroSize; // Minimum pillar width
+        double maxPillarWidth = 0.2 * sceneWidth; // Maximum pillar width
+
+        // Ensure minimum and maximum constraints
+        double startX = Math.random() * (sceneWidth / 2);
+        double endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
+
+        double startY = 6.0 / 10.0 * sceneWidth; // Fixed y position
+        double endY = sceneWidth; // Fixed y position at the bottom of the screen
+
+        // Create the pillar
+        double pillarWidth = endX - startX;
+        double pillarHeight = endY - startY;
+        Rectangle pillar = new Rectangle(startX, startY, pillarWidth, pillarHeight);
+        pillar.setFill(Color.GREEN); // You can change the color as needed
+
+        root.getChildren().add(pillar);
+
+        // Update the lastPillarEndX
+        lastPillarEndX = endX;
+
+        // Return information about the generated pillar
+        return new PillarInfo(startX, endX, startY, endY);
+    }
+
+    private void setHeroPosition(ImageView heroim, PillarInfo pillarInfo) {
+        // Set the hero's position based on the last generated pillar
+        double heroX = pillarInfo.getEndX() - heroim.getFitWidth();
+        double heroY = pillarInfo.getStartY(); // Align with pillar's startY
+        heroim.setX(heroX);
+        heroim.setY(heroY);
+    }
+
+    // A simple class to hold information about the generated pillar
+    private static class PillarInfo {
+        private final double startX;
+        private final double endX;
+        private final double startY;
+        private final double endY;
+
+        public PillarInfo(double startX, double endX, double startY, double endY) {
+            this.startX = startX;
+            this.endX = endX;
+            this.startY = startY;
+            this.endY = endY;
+        }
+
+        public double getStartX() {
+            return startX;
+        }
+
+        public double getEndX() {
+            return endX;
+        }
+
+        public double getStartY() {
+            return startY;
+        }
+
+        public double getEndY() {
+            return endY;
+        }
+    }
+
+
 
 }
