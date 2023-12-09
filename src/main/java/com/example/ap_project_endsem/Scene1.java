@@ -12,13 +12,17 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
+// NOTE : SEVENTH COMMIT IS MOST USEFUL TILL NOW
 public class Scene1 extends Application {
-    private double lastPillarEndX= 0.0;
-    private int intialPillar  = 0;
-    public static void main(String[] args) {
-        launch(args);
-    }
+    protected static double lastPillarEndX = 0.0;
+    private double finalpillarEndX = 0.0;
+    private double firstPillarEndX = 0.0;
+    private int initialPillar = 0;
+    private double hs = 0;
+
+//    public static void main(String[] args) {
+//        launch(args);
+//    }
 
     @Override
     public void start(Stage stage) {
@@ -26,6 +30,7 @@ public class Scene1 extends Application {
     }
 
     private void welcomeScreen(Stage stage) {
+
         Group root = new Group();
         Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
 
@@ -87,6 +92,7 @@ public class Scene1 extends Application {
     }
 
     private void showScene2(Stage stage) {
+
         Group root = new Group();
         Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
 
@@ -103,51 +109,51 @@ public class Scene1 extends Application {
         double iconSize = (3.0 / 40.0) * scene.getWidth();
         pauseButton.setFitWidth(iconSize);
         pauseButton.setFitHeight(iconSize);
-
-        // Set the left margin
-        double leftMargin = 10;
+        double leftMargin = 10;// Set the left margin
         double topMargin = 10;
         pauseButton.setX(leftMargin);
         pauseButton.setY(topMargin);
 
         // Hero Image
-        Image hero = new Image("heroim.png");
-        ImageView heroim = new ImageView(hero);
+        Image heroImage = new Image("heroim.png");
+        Hero hero = Hero.getInstance(heroImage);
         double heroSize = (2.0 / 40.0) * scene.getWidth();
-        heroim.setFitWidth(heroSize);
-        heroim.setFitHeight(heroSize);
+        double hs = heroSize;
+        hero.setFitWidth(heroSize);
+        hero.setFitHeight(heroSize);
 
         // Generate the first pillar
-        PillarInfo firstPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
-        setHeroPosition(heroim, firstPillarInfo);
+        PillarInfo firstPillarInfo = generateRandomPillar(root, scene.getWidth());
+        hero.setPosition(firstPillarInfo);
         // Generate the second pillar
-        PillarInfo secondPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
-        setHeroPosition(heroim, secondPillarInfo);
+        PillarInfo secondPillarInfo = generateRandomPillar(root, scene.getWidth());
 
-        root.getChildren().addAll(heroim, pauseButton);
+
+        root.getChildren().addAll(hero, pauseButton);
         stage.setScene(scene);
     }
 
-    // The code requires scene to be rectangle only it is a dependent code
-    private PillarInfo generateRandomPillar(Group root, double sceneWidth, double heroSize) {
-        double minPillarWidth = 1.5 * heroSize; // Minimum pillar width
+
+
+
+
+    // The code requires scene to be SQUARE only it is a dependent code
+    private PillarInfo generateRandomPillar(Group root, double sceneWidth) {
+        double minPillarWidth = 1.5 * hs; // Minimum pillar width
         double maxPillarWidth = 0.2 * sceneWidth; // Maximum pillar width
 
         // Ensure minimum and maximum constraints
         double startX;
         double endX;
-        if(intialPillar == 0){
+        if (initialPillar == 0) {// no pillar generated till now
             startX = 0.0;
             endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
 
-        }
-
-        else if (lastPillarEndX == 0.0) {
+        } else if (lastPillarEndX == 0.0) {
             // For the first pillar, start from the left
             startX = 0.0;
             endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
-        }
-        else {
+        } else {
             // For subsequent pillars, start from the last pillar's end
             startX = lastPillarEndX + Math.random() * 20; // Adjust for spacing
             endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
@@ -162,24 +168,31 @@ public class Scene1 extends Application {
         Rectangle pillar = new Rectangle(startX, startY, pillarWidth, pillarHeight);
         pillar.setFill(Color.BLACK); // You can change the color as needed
 
+
+
+
+        // This section we need to work upon
+//        if no pillar is create the lastpillarendx should be the endx of first pillar
+        // if the game has not started then also it should be the first pillar endx only
+        // if game has started then it has to change with last generated pillar's endx
+        if(initialPillar==0){
+            lastPillarEndX = endX;
+        }
+        if(initialPillar == 0){
+            finalpillarEndX  = lastPillarEndX;
+        }else{
+            finalpillarEndX = endX;
+        }
+
         root.getChildren().add(pillar);
-
-        // Update the lastPillarEndX
-        lastPillarEndX = endX;
-
         // Return information about the generated pillar
         return new PillarInfo(startX, endX, startY, endY);
     }
 
-    private void setHeroPosition(ImageView heroim, PillarInfo pillarInfo) {
-        // Set the hero's position based on the last generated pillar
-        double heroX = pillarInfo.getEndX() - heroim.getFitWidth() ;
-        double heroY = pillarInfo.getStartY() - 30; // reducing 30 to align top of pillar and base of hero
-        heroim.setX(heroX);
-        heroim.setY(heroY);
-    }
 
-    // A simple class to hold information about the generated pillar
+
+
+    // THIS CLASS CONTAINS ALL THE INFO ABOUT PILLAR
     private static class PillarInfo {
         private final double startX;
         private final double endX;
@@ -209,7 +222,50 @@ public class Scene1 extends Application {
             return endY;
         }
     }
-    public void Vinay(){
 
+
+
+
+
+//    THIS CLASS CONTAINS ALL THE INFO ABOUT HERO
+    private static class Hero extends ImageView {
+        private static Hero instance  = null;
+
+        private Hero(Image image) {
+            super(image);
+        }
+
+        public static Hero getInstance(Image image) {
+            if (instance == null) {
+                instance = new Hero(image);
+            }
+            return instance;
+        }
+
+        public double getEndX() {
+            return getX() + getTranslateX() + getFitWidth();
+        }
+
+        public double getStartX() {
+            return getX() + getTranslateX();
+        }
+
+        public double getEndY() {
+            return getY() + getTranslateY() + getFitHeight();
+        }
+
+        public double getStartY() {
+            return getY() + getTranslateY();
+        }
+        // This is the method which we need to work upon
+        public void setPosition(PillarInfo pillarInfo) {
+            double heroX = lastPillarEndX-30;
+            double heroY = pillarInfo.getStartY() - 30; // reducing 30 to align top of pillar and base of hero
+            setX(heroX);
+            setY(heroY);
+            double anchorX = getEndX() - getFitWidth() / 2;
+            System.out.println("Adjusted AnchorX: " + anchorX);
+            System.out.println("Adjusted EndX of Pillar: " + pillarInfo.getEndX());
+        }
     }
 }
