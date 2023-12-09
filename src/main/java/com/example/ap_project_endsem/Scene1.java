@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 
 public class Scene1 extends Application {
     private double lastPillarEndX= 0.0;
+    private int intialPillar  = 0;
     public static void main(String[] args) {
         launch(args);
     }
@@ -115,28 +116,42 @@ public class Scene1 extends Application {
         double heroSize = (2.0 / 40.0) * scene.getWidth();
         heroim.setFitWidth(heroSize);
         heroim.setFitHeight(heroSize);
-        PillarInfo pillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
-        setHeroPosition(heroim, pillarInfo);
-        // Center the hero image within the scene
-        double centerX = (scene.getWidth() - heroSize) / 2;
-        double centerY = (scene.getHeight() - heroSize) / 2;
 
-        heroim.setX(centerX);
-        heroim.setY(centerY);
+        // Generate the first pillar
+        PillarInfo firstPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
+        setHeroPosition(heroim, firstPillarInfo);
+        // Generate the second pillar
         PillarInfo secondPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
         setHeroPosition(heroim, secondPillarInfo);
 
         root.getChildren().addAll(heroim, pauseButton);
         stage.setScene(scene);
     }
+
     // The code requires scene to be rectangle only it is a dependent code
     private PillarInfo generateRandomPillar(Group root, double sceneWidth, double heroSize) {
         double minPillarWidth = 1.5 * heroSize; // Minimum pillar width
         double maxPillarWidth = 0.2 * sceneWidth; // Maximum pillar width
 
         // Ensure minimum and maximum constraints
-        double startX = Math.random() * (sceneWidth / 2);
-        double endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
+        double startX;
+        double endX;
+        if(intialPillar == 0){
+            startX = 0.0;
+            endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
+
+        }
+
+        else if (lastPillarEndX == 0.0) {
+            // For the first pillar, start from the left
+            startX = 0.0;
+            endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
+        }
+        else {
+            // For subsequent pillars, start from the last pillar's end
+            startX = lastPillarEndX + Math.random() * 20; // Adjust for spacing
+            endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
+        }
 
         double startY = 6.0 / 10.0 * sceneWidth; // Fixed y position
         double endY = sceneWidth; // Fixed y position at the bottom of the screen
@@ -145,7 +160,7 @@ public class Scene1 extends Application {
         double pillarWidth = endX - startX;
         double pillarHeight = endY - startY;
         Rectangle pillar = new Rectangle(startX, startY, pillarWidth, pillarHeight);
-        pillar.setFill(Color.GREEN); // You can change the color as needed
+        pillar.setFill(Color.BLACK); // You can change the color as needed
 
         root.getChildren().add(pillar);
 
@@ -158,8 +173,8 @@ public class Scene1 extends Application {
 
     private void setHeroPosition(ImageView heroim, PillarInfo pillarInfo) {
         // Set the hero's position based on the last generated pillar
-        double heroX = pillarInfo.getEndX() - heroim.getFitWidth();
-        double heroY = pillarInfo.getStartY(); // Align with pillar's startY
+        double heroX = pillarInfo.getEndX() - heroim.getFitWidth() ;
+        double heroY = pillarInfo.getStartY() - 30; // reducing 30 to align top of pillar and base of hero
         heroim.setX(heroX);
         heroim.setY(heroY);
     }
@@ -194,7 +209,4 @@ public class Scene1 extends Application {
             return endY;
         }
     }
-
-
-
 }
