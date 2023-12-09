@@ -5,6 +5,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
@@ -37,19 +38,20 @@ public class Scene1 extends Application {
         Text stickText = new Text("STICK");
         stickText.setFont(Font.font("Arial", FontWeight.BOLD, 60));
         double stickTextHeight = stickText.getLayoutBounds().getHeight();
+
         // Create Hero text
         Text heroText = new Text("HERO");
         heroText.setFont(Font.font("Arial", FontWeight.BOLD, 55));
         heroText.setY(stickTextHeight + 20); // Set Y position below the Stick text
+
         // Center the text within the image background
         double textWidth = Math.max(stickText.getLayoutBounds().getWidth(), heroText.getLayoutBounds().getWidth());
         double centerX = (scene.getWidth() - textWidth) / 2;
         double centerY = 100;
+
         stickText.setX(centerX);
         stickText.setY(centerY);
 
-        heroText.setX(centerX+10);
-        heroText.setY(centerY + 2*stickTextHeight/3);
         heroText.setX(centerX + 10);
         heroText.setY(centerY + 2 * stickTextHeight / 3);
 
@@ -76,10 +78,52 @@ public class Scene1 extends Application {
         playText.setFill(Color.WHITE);
         playText.setX(circle.getCenterX() - playText.getLayoutBounds().getWidth() / 2);
         playText.setY(circle.getCenterY() + playText.getLayoutBounds().getHeight() / 4);
-
         // Add event handler to switch to Scene2 when the button is clicked
-
+        playText.setOnMouseClicked(event -> showScene2(stage));
 
         root.getChildren().addAll(circle, playText);
     }
+
+    private void showScene2(Stage stage) {
+        Group root = new Group();
+        Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
+
+        // Load background image (same as in Scene1)
+        Image gamebg = new Image("gamebg.jpg");
+        ImageView bg = new ImageView(gamebg);
+        bg.fitWidthProperty().bind(scene.widthProperty());
+        bg.fitHeightProperty().bind(scene.heightProperty());
+        root.getChildren().add(bg);
+
+        // Pause Button
+        Image pauseBtnImage = new Image("Pausebutton.png");
+        ImageView pauseButton = new ImageView(pauseBtnImage);
+        double iconSize = (3.0 / 40.0) * scene.getWidth();
+        pauseButton.setFitWidth(iconSize);
+        pauseButton.setFitHeight(iconSize);
+
+        // Set the left margin
+        double leftMargin = 10;
+        double topMargin = 10;
+        pauseButton.setX(leftMargin);
+        pauseButton.setY(topMargin);
+
+        // Hero Image
+        Image hero = new Image("heroim.png");
+        ImageView heroim = new ImageView(hero);
+        double heroSize = (3.0 / 40.0) * scene.getWidth();
+        heroim.setFitWidth(heroSize);
+        heroim.setFitHeight(heroSize);
+
+        // Center the hero image within the scene
+        double centerX = (scene.getWidth() - heroSize) / 2;
+        double centerY = (scene.getHeight() - heroSize) / 2;
+
+        heroim.setX(centerX);
+        heroim.setY(centerY);
+
+        root.getChildren().addAll(heroim, pauseButton);
+        stage.setScene(scene);
+    }
+
 }
