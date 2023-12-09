@@ -1,13 +1,13 @@
 package com.example.ap_project_endsem;
-
 import javafx.application.Application;
-import javafx.geometry.Pos;
+
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
+
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -48,13 +48,30 @@ public class Scene1 extends Application {
         stickText.setX(centerX);
         stickText.setY(centerY);
 
-        heroText.setX(centerX+10);
-        heroText.setY(centerY + 2*stickTextHeight/3);
+        heroText.setX(centerX + 10);
+        heroText.setY(centerY + 2 * stickTextHeight / 3);
 
         root.getChildren().addAll(stickText, heroText);
-
+        createPlayButton(root, scene);
         stage.setResizable(false);
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void createPlayButton(Group root, Scene scene) {
+        // Create a red circle (1.5 times larger)
+        double circleRadius = 50 * 1.5;
+        Circle circle = new Circle(circleRadius, Color.RED);
+        circle.setCenterX(scene.getWidth() / 2);
+        circle.setCenterY(scene.getHeight() / 2 - 30); // Adjust the vertical position
+
+        // Create white text inside the circle
+        Text playText = new Text("PLAY");
+        playText.setFont(Font.font("Arial", 35));
+        playText.setFill(Color.WHITE);
+        playText.setX(circle.getCenterX() - playText.getLayoutBounds().getWidth() / 2);
+        playText.setY(circle.getCenterY() + playText.getLayoutBounds().getHeight() / 4);
+
+        root.getChildren().addAll(circle, playText);
     }
 }
