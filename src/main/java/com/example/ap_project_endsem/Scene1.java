@@ -1,28 +1,50 @@
 package com.example.ap_project_endsem;
+import javafx.animation.KeyFrame;
+import javafx.animation.ScaleTransition;
+import javafx.animation.Timeline;
+import javafx.animation.TranslateTransition;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
-// NOTE : SEVENTH COMMIT IS MOST USEFUL TILL NOW
-public class Scene1 extends Application {
-    protected static double lastPillarEndX = 0.0;
-    private double finalpillarEndX = 0.0;
-    private double firstPillarEndX = 0.0;
-    private int initialPillar = 0;
-    private double hs = 0;
+import javafx.util.Duration;
 
-//    public static void main(String[] args) {
-//        launch(args);
-//    }
+import java.util.ArrayList;
+import java.util.List;
+
+public class Scene1 extends Application {
+
+    private boolean isVolumeOn = true;
+    private boolean isFlipping = false;
+    private boolean isBuildingStick = false;
+    private boolean isMovingHero = false;
+    private boolean lastpillar = false;
+    private Rectangle lpillar ;
+    private Rectangle currpillar ;
+    private Rectangle nextpillar ;
+    private ArrayList<Circle> circles = new ArrayList<>(0);
+    private List<Rectangle> pillars = new ArrayList<>();
+
+    private int HighScore = 0;
+    private int CurrentScore = 0;
+    private double lastPillarEndX= 0.0;
+    private int intialPillar  = 0;
+    public static void main(String[] args) {
+        launch(args);
+    }
 
     @Override
     public void start(Stage stage) {
@@ -30,7 +52,6 @@ public class Scene1 extends Application {
     }
 
     private void welcomeScreen(Stage stage) {
-
         Group root = new Group();
         Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
 
@@ -54,7 +75,7 @@ public class Scene1 extends Application {
         // Center the text within the image background
         double textWidth = Math.max(stickText.getLayoutBounds().getWidth(), heroText.getLayoutBounds().getWidth());
         double centerX = (scene.getWidth() - textWidth) / 2;
-        double centerY = 100;
+        double centerY = 80;
 
         stickText.setX(centerX);
         stickText.setY(centerY);
@@ -72,27 +93,98 @@ public class Scene1 extends Application {
         stage.show();
     }
 
-    private void createPlayButton(Group root, Scene scene, Stage stage) {
-        // Create a red circle (1.5 times larger)
-        double circleRadius = 50 * 1.5;
-        Circle circle = new Circle(circleRadius, Color.RED);
-        circle.setCenterX(scene.getWidth() / 2);
-        circle.setCenterY(scene.getHeight() / 2 - 30); // Adjust the vertical position
+    private void ExitScreen(Stage stage) {
+        Group root = new Group();
+        Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
 
-        // Create white text inside the circle
-        Text playText = new Text("PLAY");
-        playText.setFont(Font.font("Arial", 35));
-        playText.setFill(Color.WHITE);
-        playText.setX(circle.getCenterX() - playText.getLayoutBounds().getWidth() / 2);
-        playText.setY(circle.getCenterY() + playText.getLayoutBounds().getHeight() / 4);
-        // Add event handler to switch to Scene2 when the button is clicked
-        playText.setOnMouseClicked(event -> showScene2(stage));
+        // Load background image
+        Image backgimage = new Image("gamebg.jpg");
+        ImageView view = new ImageView(backgimage);
+        view.fitWidthProperty().bind(scene.widthProperty());
+        view.fitHeightProperty().bind(scene.heightProperty());
+        root.getChildren().add(view);
 
-        root.getChildren().addAll(circle, playText);
+        // Create Stick text
+        Text stickText = new Text("GAME");
+        stickText.setFont(Font.font("Arial", FontWeight.BOLD, 60));
+        double stickTextHeight = stickText.getLayoutBounds().getHeight();
+
+        // Create Hero text
+        Text heroText = new Text("OVER");
+        heroText.setFont(Font.font("Arial", FontWeight.BOLD, 55));
+        heroText.setY(stickTextHeight + 20); // Set Y position below the Stick text
+
+        // Center the text within the image background
+        double textWidth = Math.max(stickText.getLayoutBounds().getWidth(), heroText.getLayoutBounds().getWidth());
+        double centerX = (scene.getWidth() - textWidth) / 2;
+        double centerY = 60;
+
+        stickText.setX(centerX);
+        stickText.setY(centerY);
+
+        heroText.setX(centerX + 10);
+        heroText.setY(centerY + 2 * stickTextHeight / 3);
+
+        Text CurrScore = new Text(Integer.toString(CurrentScore));
+        CurrScore.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        CurrScore.setY(stickTextHeight + 20); // Set Y position below the Stick text
+
+        CurrScore.setX(400);
+        CurrScore.setY(230);
+
+        Text currtext = new Text("Current Score");
+        currtext.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        currtext.setY(stickTextHeight + 20); // Set Y position below the Stick text
+        currtext.setX(80);
+        currtext.setY(230);
+
+        Text HighScore = new Text(Integer.toString(CurrentScore));
+        HighScore.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        HighScore.setY(stickTextHeight + 20); // Set Y position below the Stick text
+
+        HighScore.setX(400);
+        HighScore.setY(350);
+
+        Text hightext = new Text("Best");
+        hightext.setFont(Font.font("Arial", FontWeight.BOLD, 30));
+        hightext.setY(stickTextHeight + 20); // Set Y position below the Stick text
+        hightext.setX(80);
+        hightext.setY(350);
+        retry(root,scene,stage);
+
+        root.getChildren().addAll(stickText, heroText,CurrScore,currtext,hightext,HighScore);
+
+        stage.setResizable(false);
+        stage.setScene(scene);
+        stage.show();
     }
 
-    private void showScene2(Stage stage) {
 
+
+    private void retry(Group root, Scene scene, Stage stage) {
+        // Load background image
+        Image ret = new Image("retry.png");
+        ImageView retry = new ImageView(ret);
+
+        // Set the x and y coordinates
+        double xCoordinate = 200;  // Replace with your desired x-coordinate
+        double yCoordinate = 350;  // Replace with your desired y-coordinate
+
+        // Set the image view properties
+        retry.setX(xCoordinate);
+        retry.setY(yCoordinate);
+        retry.setFitWidth(45);
+        retry.setFitHeight(45);
+
+        // Add event handler to switch to Scene2 when the retry image is clicked
+        retry.setOnMouseClicked(event -> showScene2(stage));
+
+        // Add the retry image to the root
+        root.getChildren().add(retry);
+    }
+
+
+    private void showScene2(Stage stage) {
         Group root = new Group();
         Scene scene = new Scene(root, 600, 600, Color.LIGHTSKYBLUE);
 
@@ -104,56 +196,352 @@ public class Scene1 extends Application {
         root.getChildren().add(bg);
 
         // Pause Button
-        Image pauseBtnImage = new Image("Pausebutton.png");
-        ImageView pauseButton = new ImageView(pauseBtnImage);
-        double iconSize = (3.0 / 40.0) * scene.getWidth();
-        pauseButton.setFitWidth(iconSize);
-        pauseButton.setFitHeight(iconSize);
-        double leftMargin = 10;// Set the left margin
-        double topMargin = 10;
-        pauseButton.setX(leftMargin);
-        pauseButton.setY(topMargin);
+//        Image pauseBtnImage = new Image("Pausebutton.png");
+//        ImageView pauseButton = new ImageView(pauseBtnImage);
+//        double iconSize = (3.0 / 40.0) * scene.getWidth();
+//        pauseButton.setFitWidth(iconSize);
+//        pauseButton.setFitHeight(iconSize);
+//        pauseButton.setOnMouseClicked(event -> welcomeScreen(stage));
+        // Set the left margin
+//        double leftMargin = 10;
+//        double topMargin = 10;
+//        pauseButton.setX(leftMargin);
+//        pauseButton.setY(topMargin);
 
         // Hero Image
-        Image heroImage = new Image("heroim.png");
-        Hero hero = Hero.getInstance(heroImage);
+        Image hero = new Image("heroim.png");
+        ImageView heroim = new ImageView(hero);
         double heroSize = (2.0 / 40.0) * scene.getWidth();
-        double hs = heroSize;
-        hero.setFitWidth(heroSize);
-        hero.setFitHeight(heroSize);
+        heroim.setFitWidth(heroSize);
+        heroim.setFitHeight(heroSize);
+
+
 
         // Generate the first pillar
-        PillarInfo firstPillarInfo = generateRandomPillar(root, scene.getWidth());
-        hero.setPosition(firstPillarInfo);
-        // Generate the second pillar
-        PillarInfo secondPillarInfo = generateRandomPillar(root, scene.getWidth());
+        PillarInfo firstPillarInfo = generateRandomPillar(root, scene.getWidth(), heroSize);
+        setHeroPosition(heroim, firstPillarInfo);
+        double screenHeight = stage.getHeight();
+        double pillarWidth = 100;
+        double minDistanceBetweenPillars = 200;
+        double maxDistanceBetweenPillars = 400;
+        double totalWidth = 4 * pillarWidth + 3 * minDistanceBetweenPillars;
+        double startX = (screenHeight - totalWidth) / 2;
+        for (int i = 0; i < 4; i++) {
+            Rectangle pillar = new Rectangle(50, 300, Color.BLACK);
+            pillar.setY(screenHeight - pillar.getHeight()+21);
+            pillar.setX(startX + i * (pillarWidth + minDistanceBetweenPillars));
+            lpillar=pillar ;
+            pillars.add(pillar);
+            if (pillar.getX()>stage.getWidth()){
+                lastpillar=true ;
+                lpillar=pillar ;
+                break ;
+            }
+
+            double circleRadius = 2 * 1.8;
+            double dist = 100+20*Math.random()+200*i ;
+            if (dist < 700){
+                Circle circle = new Circle(circleRadius, Color.RED);
+                circle.setCenterX(dist);
+                double randomValue = Math.random();
+                double randomY = ((randomValue < 0.5) ? 40 : -10);
+                circle.setCenterY(screenHeight - pillar.getHeight()+randomY);
+                circles.add(circle);
+                root.getChildren().add(circle);
+            }
+            root.getChildren().add(pillar);
+        }
+
+        Rectangle stick = new Rectangle(4, 2, Color.BLACK);
+        stick.setX(heroim.getX()+25);
+        stick.setY(heroim.getY()+28);
+        Rotate stickRotation = new Rotate(0, 0, 0);
+        stick.getTransforms().add(stickRotation);
+
+        // Set up the timeline for stick building
+        Timeline buildTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(0.01), event -> buildStick(stick))
+        );
+        buildTimeline.setCycleCount(Timeline.INDEFINITE);
+
+        scene.setOnMousePressed(event -> {
+            if (!isBuildingStick && isMovingHero) {
+                flipHero(heroim);
+                isFlipping = true;  // Set the flipping flag
+
+            } else if (!isMovingHero && !isBuildingStick ) {
+                isBuildingStick = true;
+                buildTimeline.play();
+            }
+        });
+
+        scene.setOnMouseReleased(event -> {
+            isBuildingStick = false;
+            buildTimeline.pause();
+
+            if (!isFlipping && !isBuildingStick) {
+                rotateStick(stick);
+                moveStickHero(stick, heroim, root);
+                isMovingHero = true;
+            }
+
+            if (event.getButton() == MouseButton.SECONDARY) { // Right mouse button
+                // Toggle flipping flag when the right mouse button is released
+                isFlipping = !isFlipping;
+            }
+        });
 
 
-        root.getChildren().addAll(hero, pauseButton);
+
+
+//        root.getChildren().addAll(heroim, pauseButton,stick);
+        root.getChildren().addAll(heroim,stick);
         stage.setScene(scene);
     }
 
 
 
 
+    private void createPlayButton(Group root, Scene scene, Stage stage) {
+        // Create a red circle (1.5 times larger)
+        double circleRadius = 50 * 1.2;
+        Circle circle = new Circle(circleRadius, Color.RED);
+        circle.setCenterX(scene.getWidth() / 2-4);
+        circle.setCenterY(scene.getHeight() / 2 +45); // Adjust the vertical position
 
-    // The code requires scene to be SQUARE only it is a dependent code
-    private PillarInfo generateRandomPillar(Group root, double sceneWidth) {
-        double minPillarWidth = 1.5 * hs; // Minimum pillar width
+        // Create white text inside the circle
+        Text playText = new Text("PLAY");
+        playText.setFont(Font.font("Arial", 35));
+        playText.setFill(Color.WHITE);
+        playText.setX(circle.getCenterX() - playText.getLayoutBounds().getWidth() / 2);
+        playText.setY(circle.getCenterY() + playText.getLayoutBounds().getHeight() / 4);
+
+        // Add event handler to switch to Scene2 when the button is clicked
+        circle.setOnMouseClicked(event -> showScene2(stage));
+        playText.setOnMouseClicked(event -> showScene2(stage));
+
+        TranslateTransition floatTransition = new TranslateTransition(Duration.seconds(1), circle);
+        floatTransition.setByY(8);
+        floatTransition.setCycleCount(TranslateTransition.INDEFINITE);
+        floatTransition.setAutoReverse(true);
+        floatTransition.play();
+
+        TranslateTransition floatTransition1 = new TranslateTransition(Duration.seconds(1), playText);
+        floatTransition1.setByY(8);
+        floatTransition1.setCycleCount(TranslateTransition.INDEFINITE);
+        floatTransition1.setAutoReverse(true);
+        floatTransition1.play();
+
+        Image btexitimg = new Image("btexit.png");
+        BackgroundImage btexitimgbg = new BackgroundImage(btexitimg,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.DEFAULT,
+                new BackgroundSize(1.0, 1.0, false, false, true, true));
+        Background btexitbg = new Background(btexitimgbg);
+        Button btEndGame = new Button("");
+        btEndGame.setBackground(btexitbg);
+        btEndGame.setShape(new Circle(50 * 2.6));
+        btEndGame.setMaxSize(50 * 2.6, 50 * 2.6);
+        btEndGame.setPrefSize(50 * 2.6, 50 * 2.6);
+        btEndGame.setLayoutX((scene.getWidth()) / 2 -69);
+        btEndGame.setLayoutY((scene.getHeight())-165);
+
+        Image btvolOnImg = new Image("on.png");
+        Image btvolOffImg = new Image("off.png");
+
+        BackgroundImage btvolimgbg = new BackgroundImage(btvolOnImg,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.DEFAULT,
+                new BackgroundSize(1.0, 1.0, false, false, true, true));
+        Background btvolbg = new Background(btvolimgbg);
+        Button btvolGame = new Button("");
+        btvolGame.setBackground(btvolbg);
+        btvolGame.setShape(new Circle(50 * 2.57));
+        btvolGame.setMaxSize(50 * 2.57, 50 * 2.57);
+        btvolGame.setPrefSize(50 * 2.57, 50 * 2.57);
+        btvolGame.setLayoutX((scene.getWidth()) / 2 -67.3);
+        btvolGame.setLayoutY(135);
+
+        Image pauseBtnImage = new Image("Pausebutton.png");
+        ImageView pauseButton = new ImageView(pauseBtnImage);
+        double iconSize = (3.0 / 40.0) * scene.getWidth();
+        pauseButton.setFitWidth(iconSize);
+        pauseButton.setFitHeight(iconSize);
+        pauseButton.setOnMouseClicked(event -> ExitScreen(stage));
+
+        // Set the left margin
+        double leftMargin = 10;
+        double topMargin = 10;
+        pauseButton.setX(leftMargin);
+        pauseButton.setY(topMargin);
+
+
+        root.getChildren().addAll(circle, playText,btEndGame, btvolGame,pauseButton);
+
+        btvolGame.setOnAction(event -> {
+            // Toggle volume state
+            isVolumeOn = !isVolumeOn;
+
+            // Change background image based on volume state
+            if (isVolumeOn) {
+                btvolGame.setBackground(new Background(new BackgroundImage(btvolOnImg,
+                        BackgroundRepeat.NO_REPEAT,
+                        BackgroundRepeat.NO_REPEAT,
+                        BackgroundPosition.DEFAULT,
+                        new BackgroundSize(1.0, 1.0, false, false, true, true))));
+            } else {
+                btvolGame.setBackground(new Background(new BackgroundImage(btvolOffImg,
+                        BackgroundRepeat.NO_REPEAT,
+                        BackgroundRepeat.NO_REPEAT,
+                        BackgroundPosition.DEFAULT,
+                        new BackgroundSize(1.0, 1.0, false, false, true, true))));
+            }
+        });
+
+        // Apply hover animation to buttons
+        applyHoverAnimation(btEndGame);
+        applyHoverAnimation(btvolGame);
+
+        // Add action handler for btEndGame button
+        btEndGame.setOnAction(event -> {
+            // Close the application
+            Platform.exit();
+        });
+
+    }
+    private void applyHoverAnimation(Button button) {
+        ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(100), button);
+        scaleTransition.setFromX(1.0);
+        scaleTransition.setFromY(1.0);
+        scaleTransition.setToX(1.2);
+        scaleTransition.setToY(1.2);
+
+        button.setOnMouseEntered(event -> {
+            scaleTransition.setRate(1.0);
+            scaleTransition.play();
+        });
+
+        button.setOnMouseExited(event -> {
+            scaleTransition.setRate(-1.0);
+            scaleTransition.play();
+        });
+    }
+
+    private void buildStick(Rectangle stick) {
+        Platform.runLater(() -> {
+            double oldY = stick.getY();
+            stick.setY(oldY - 2);
+            stick.setHeight(stick.getHeight() + 2);
+        });
+    }
+
+    private void rotateStick(Rectangle stick) {
+        double pivotX = stick.getX() + stick.getWidth() / 2;
+        double pivotY = stick.getY() + stick.getHeight();
+        Rotate rotate = new Rotate(90, pivotX, pivotY);
+        stick.getTransforms().add(rotate);
+    }
+    private void checkCollisionWithCircles(ImageView hero ,Group root , ArrayList<Circle> circles ) {
+        for (Circle circle : circles) {
+            // System.out.println(circle.toString());
+            if (hero.getBoundsInParent().intersects(circle.getBoundsInParent())) {
+                root.getChildren().remove(circle);
+                CurrentScore++;
+                System.out.println("Score: " + CurrentScore);
+            }
+        }
+    }
+    private void moveStickHero(Rectangle stick , ImageView hero,Group root) {
+        double startX = stick.getX();
+        double endX = stick.getX() + stick.getHeight();
+        double heroWidth = hero.getFitWidth();
+
+        // Animate the hero moving along the stick
+        Timeline moveHeroTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(0.01), event -> {
+                    if (hero.getLayoutX() + heroWidth < endX-15) {
+                        hero.setLayoutX(hero.getLayoutX() + 2);
+                        checkCollisionWithCircles(hero,root,circles);
+                        for (int i = 0; i < pillars.size(); i++) {
+                            Rectangle pillar = pillars.get(i);
+                            double nextPillarX = (i < pillars.size() - 1) ? pillars.get(i + 1).getX() : Double.MAX_VALUE;
+
+                            // Check if hero should fall
+                            if (hero.getX() + stick.getHeight() < pillar.getX()-pillar.getWidth()/2 || hero.getX() > nextPillarX+pillar.getWidth()/2 ) {
+                                // Implement the logic for hero falling
+                                System.out.println("Hero falls!");
+                                break; // You may want to break out of the loop or handle falling in some way
+                            }
+                        }
+                    }
+                })
+        );
+        moveHeroTimeline.setCycleCount(Timeline.INDEFINITE);
+        moveHeroTimeline.play();
+    }
+
+    private void flipHero(ImageView hero) {
+        if (isHeroOnPillar(hero) || isBuildingStick) {
+            System.out.println("Cannot flip!!! Hero is on the pillar or building the stick.");
+            return;
+        }
+
+        if (!isFlipping) {
+            isFlipping = true;
+
+            // Flip the hero vertically
+            hero.setScaleY(hero.getScaleY() * -1);
+            hero.setY(hero.getY() + 25);
+
+            // Set a small delay to avoid rapid flipping
+            Timeline flipTimeline = new Timeline(
+                    new KeyFrame(Duration.seconds(0.5), event -> isFlipping = false)
+            );
+            flipTimeline.play();
+        }
+    }
+
+    private boolean isHeroOnPillar(ImageView hero) {
+        double heroX = hero.getX();
+        double heroWidth = hero.getFitWidth();
+
+        for (Rectangle pillar : pillars) {
+            double pillarStartX = pillar.getX();
+            double pillarEndX = pillarStartX + pillar.getWidth();
+
+            if (heroX > pillarStartX && heroX + heroWidth < pillarEndX) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    
+
+
+
+    // The code requires scene to be rectangle only it is a dependent code
+    private PillarInfo generateRandomPillar(Group root, double sceneWidth, double heroSize) {
+        double minPillarWidth = 1.5 * heroSize; // Minimum pillar width
         double maxPillarWidth = 0.2 * sceneWidth; // Maximum pillar width
 
         // Ensure minimum and maximum constraints
         double startX;
         double endX;
-        if (initialPillar == 0) {// no pillar generated till now
+        if(intialPillar == 0){
             startX = 0.0;
             endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
 
-        } else if (lastPillarEndX == 0.0) {
+        }
+
+        else if (lastPillarEndX == 0.0) {
             // For the first pillar, start from the left
             startX = 0.0;
             endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
-        } else {
+        }
+        else {
             // For subsequent pillars, start from the last pillar's end
             startX = lastPillarEndX + Math.random() * 20; // Adjust for spacing
             endX = startX + Math.max(minPillarWidth, Math.random() * (Math.min(maxPillarWidth, sceneWidth / 2 - startX)));
@@ -168,31 +556,25 @@ public class Scene1 extends Application {
         Rectangle pillar = new Rectangle(startX, startY, pillarWidth, pillarHeight);
         pillar.setFill(Color.BLACK); // You can change the color as needed
 
-
-
-
-        // This section we need to work upon
-//        if no pillar is create the lastpillarendx should be the endx of first pillar
-        // if the game has not started then also it should be the first pillar endx only
-        // if game has started then it has to change with last generated pillar's endx
-        if(initialPillar==0){
-            lastPillarEndX = endX;
-        }
-        if(initialPillar == 0){
-            finalpillarEndX  = lastPillarEndX;
-        }else{
-            finalpillarEndX = endX;
-        }
-
         root.getChildren().add(pillar);
+
+        // Update the lastPillarEndX
+        lastPillarEndX = endX;
+        currpillar =pillar ;
+
         // Return information about the generated pillar
         return new PillarInfo(startX, endX, startY, endY);
     }
 
+    private void setHeroPosition(ImageView heroim, PillarInfo pillarInfo) {
+        // Set the hero's position based on the last generated pillar
+        double heroX = pillarInfo.getEndX() - heroim.getFitWidth() ;
+        double heroY = pillarInfo.getStartY() - 30; // reducing 30 to align top of pillar and base of hero
+        heroim.setX(heroX);
+        heroim.setY(heroY);
+    }
 
-
-
-    // THIS CLASS CONTAINS ALL THE INFO ABOUT PILLAR
+    // A simple class to hold information about the generated pillar
     private static class PillarInfo {
         private final double startX;
         private final double endX;
@@ -223,49 +605,4 @@ public class Scene1 extends Application {
         }
     }
 
-
-
-
-
-//    THIS CLASS CONTAINS ALL THE INFO ABOUT HERO
-    private static class Hero extends ImageView {
-        private static Hero instance  = null;
-
-        private Hero(Image image) {
-            super(image);
-        }
-
-        public static Hero getInstance(Image image) {
-            if (instance == null) {
-                instance = new Hero(image);
-            }
-            return instance;
-        }
-
-        public double getEndX() {
-            return getX() + getTranslateX() + getFitWidth();
-        }
-
-        public double getStartX() {
-            return getX() + getTranslateX();
-        }
-
-        public double getEndY() {
-            return getY() + getTranslateY() + getFitHeight();
-        }
-
-        public double getStartY() {
-            return getY() + getTranslateY();
-        }
-        // This is the method which we need to work upon
-        public void setPosition(PillarInfo pillarInfo) {
-            double heroX = lastPillarEndX-30;
-            double heroY = pillarInfo.getStartY() - 30; // reducing 30 to align top of pillar and base of hero
-            setX(heroX);
-            setY(heroY);
-            double anchorX = getEndX() - getFitWidth() / 2;
-            System.out.println("Adjusted AnchorX: " + anchorX);
-            System.out.println("Adjusted EndX of Pillar: " + pillarInfo.getEndX());
-        }
-    }
 }
