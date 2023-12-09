@@ -209,4 +209,7 @@ public class Scene1 extends Application {
             return endY;
         }
     }
+    public void Vinay(){
+
+    }
 }
